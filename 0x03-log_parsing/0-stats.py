@@ -1,54 +1,69 @@
 #!/usr/bin/python3
+"""
+This script reads from stdin line by line and computes metrics based on the input log data.
+
+Input format:
+<IP Address> - [<date>] "GET /projects/260 HTTP/1.1" <status code> <file size>
+
+After every 10 lines and/or a keyboard interruption (CTRL + C), it prints the following statistics from the beginning:
+- Total file size: File size: <total size>
+- Number of lines by status code in ascending order of status code
+
+Possible status codes: 200, 301, 400, 401, 403, 404, 405, 500
+"""
 
 import sys
+import signal
+import re
 
+# Initialize variables
+total_size = 0
+status_counts = {}
+line_count = 0
 
-def print_msg(dict_sc, total_file_size):
-    """
-    Method to print
-    Args:
-        dict_sc: dict of status codes
-        total_file_size: total of the file
-    Returns:
-        Nothing
-    """
+# Define a regular expression pattern to match the log lines
+log_pattern = re.compile(
+    r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} - \[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\] "GET /projects/260 HTTP/1\.1" (\d{3}) (\d+)$'
+)
 
-    print("File size: {}".format(total_file_size))
-    for key, val in sorted(dict_sc.items()):
-        if val != 0:
-            print("{}: {}".format(key, val))
+# Define a list of valid status codes
+valid_status_codes = [200, 301, 400, 401, 403, 404, 405, 500]
 
+# Signal handler for keyboard interruption
+def signal_handler(sig, frame):
+    print_metrics()
+    sys.exit(0)
 
-total_file_size = 0
-code = 0
-counter = 0
-dict_sc = {"200": 0,
-           "301": 0,
-           "400": 0,
-           "401": 0,
-           "403": 0,
-           "404": 0,
-           "405": 0,
-           "500": 0}
+# Register the signal handler
+signal.signal(signal.SIGINT, signal_handler)
 
+def print_metrics():
+    """Print the accumulated metrics."""
+    print(f"File size: {total_size}")
+    for code in sorted(status_counts):
+        if status_counts[code] > 0:
+            print(f"{code}: {status_counts[code]}")
+
+# Read lines from stdin
 try:
     for line in sys.stdin:
-        parsed_line = line.split()  # ✄ trimming
-        parsed_line = parsed_line[::-1]  # inverting
+        line = line.strip()
+        match = log_pattern.match(line)
+        if match:
+            status_code = int(match.group(1))
+            file_size = int(match.group(2))
+            total_size += file_size
 
-        if len(parsed_line) > 2:
-            counter += 1
+            if status_code in valid_status_codes:
+                if status_code not in status_counts:
+                    status_counts[status_code] = 0
+                status_counts[status_code] += 1
 
-            if counter <= 10:
-                total_file_size += int(parsed_line[0])  # file size
-                code = parsed_line[1]  # status code
+            line_count += 1
 
-                if (code in dict_sc.keys()):
-                    dict_sc[code] += 1
-
-            if (counter == 10):
-                print_msg(dict_sc, total_file_size)
-                counter = 0
-
+            if line_count % 10 == 0:
+                print_metrics()
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
 finally:
-    print_msg(dict_sc, total_file_size)
+    print_metrics()
