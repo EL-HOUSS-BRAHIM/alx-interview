@@ -1,7 +1,12 @@
 #!/usr/bin/python3
 
+""" make change function"""
+
 
 def makeChange(coins, total):
+    """
+    Return: fewest number of coins needed to meet total
+    """
     if total <= 0:
         return 0
     # Initialize the DP array with a large value (infinity)
