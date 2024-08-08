@@ -1,14 +1,19 @@
 #!/usr/bin/python3
 """ Prime Game """
+
+
 def sieve_of_eratosthenes(max_num):
     """
-    Generates a list of boolean values indicating whether numbers up to max_num are prime.
-    
+    Generates a list of boolean values indicating whether
+    numbers up to max_num are prime.
+
     Args:
-        max_num (int): The maximum number up to which to check for prime numbers.
-        
+        max_num (int): The maximum number up to which to
+        check for prime numbers.
+
     Returns:
-        list: A list where index i is True if i is a prime number, False otherwise.
+        list: A list where index i is True if i is a
+        prime number, False otherwise.
     """
     # Initialize a list to True, assuming all numbers are prime initially
     primes = [True] * (max_num + 1)
@@ -22,36 +27,40 @@ def sieve_of_eratosthenes(max_num):
 
     return primes
 
+
 def isWinner(x, nums):
     """
     Determines the winner of the prime game played over x rounds.
 
     Args:
         x (int): The number of rounds to be played.
-        nums (list): A list of integers where each integer represents the range of numbers (from 1 to n) for that round.
+        nums (list): A list of integers where each integer represents
+        the range of numbers (from 1 to n) for that round.
 
     Returns:
-        str or None: The name of the player with the most wins ("Maria" or "Ben"). 
+        str or None: The name of the player with
+        the most wins ("Maria" or "Ben").
                     Returns None if the number of wins is tied.
     """
     if x <= 0 or not nums:
         return None
-    
+
     # Determine the maximum number across all rounds
     max_num = max(nums)
-    
-    # Get the prime numbers up to the maximum number using Sieve of Eratosthenes
+
+    # Get the prime numbers up to the maximum number using Sieve of
+    # Eratosthenes
     primes = sieve_of_eratosthenes(max_num)
-    
+
     # Initialize win counters for both players
     maria_wins = 0
     ben_wins = 0
-    
+
     # Simulate each round
     for n in nums:
         # Count the number of primes within the range 1 to n
         prime_count = sum(primes[1:n + 1])
-        
+
         # Determine the winner of the current round based on the prime count
         if prime_count % 2 != 0:
             # If the count of primes is odd, Maria wins
@@ -59,7 +68,7 @@ def isWinner(x, nums):
         else:
             # If the count of primes is even, Ben wins
             ben_wins += 1
-    
+
     # Determine the overall winner based on the number of wins
     if maria_wins > ben_wins:
         return "Maria"
